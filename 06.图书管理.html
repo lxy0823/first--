@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./lib/bootstrap.css">
+    <script src="./lib/jquery.js"></script>
+</head>
+
+<body style="padding: 15px;">
+
+
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">图书表格</h3>
+        </div>
+        <div class="panel-body form-inline">
+            <div class="input-group">
+                <div class="input-group-addon">书名</div>
+                <input type="text" class="form-control" id="iptBookname" placeholder="请输入书名">
+            </div>
+            <div class="input-group">
+                <div class="input-group-addon">作者</div>
+                <input type="text" class="form-control" id="iptAuthor" placeholder="请输入作者">
+            </div>
+            <div class="input-group">
+                <div class="input-group-addon">出版社</div>
+                <input type="text" class="form-control" id="iptPublisher" placeholder="请输入出版社">
+            </div>
+            <button id="btnAdd" class="btn btn-primary">添加</button>
+            <button id="btnAdd1" class="btn btn-primary">查询</button>
+        </div>
+    </div>
+
+
+
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>书名</th>
+                <th>作者</th>
+                <th>出版社</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="tb">
+            <tr>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td><a href="javascript:;">删除</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <script>
+        // 获取根路径
+        const besetUrl = 'http://ajax-base-api-t.itheima.net'
+        //渲染函数
+        const renderTable = (newData) => {
+            // 获取图书数据
+            $.get(besetUrl + '/api/getbooks', newData, res => {
+                const { data } = res
+                // console.log(data);
+                renderArr = []
+                data.forEach(item => {
+                    const tr = `
+                    <tr>
+                        <td>${item.id}</td>
+                        <td>${item.bookname}</td>
+                        <td>${item.author}</td>
+                        <td>${item.publisher}</td>
+                        <td><a href="javascript:;" class = "item-id" data-id = "${item.id}">删除</a></td>
+                    </tr>`
+                    renderArr.push(tr)
+                })
+                $('#tb').empty().append(renderArr)
+            })
+        }
+
+        // 删除事件添加
+        $('#tb').on('click', '.item-id', function () {
+            // console.log($(this).attr('data-id'));
+            const bookID = $(this).attr('data-id')
+            $.ajax({
+                type: 'GET',
+                url: besetUrl + '/api/delbook',
+                data: { id: bookID },
+                success: res => {
+                    const { msg } = res
+                    alert(msg)
+                    renderTable()
+                }
+            })
+
+        })
+
+        // 增加数据
+        $('#btnAdd').on('click', () => {
+            const bookData = {
+                bookname: $('#iptBookname').val().trim(),
+                author: $('#iptAuthor').val().trim(),
+                publisher: $('#iptPublisher').val().trim(),
+            }
+            // console.log(bookData);
+            if ($('#iptBookname').val().trim() && $('#iptAuthor').val().trim() && $('#iptPublisher').val().trim()) {
+                $.post(besetUrl + '/api/addbook', bookData, res => {
+                    const { status, msg } = res
+                    alert(msg)
+                    if (status !== 201) return
+                    $('#iptBookname').val('')
+                    $('#iptAuthor').val('')
+                    $('#iptPublisher').val('')
+                    renderTable()
+                })
+            } else {
+                alert('必填内容不能为空')
+            }
+        })
+
+        // 查询功能
+        $('#btnAdd1').on('click', () => {
+            console.log(1);
+            const bookData = {
+                bookname: $('#iptBookname').val().trim(),
+                author: $('#iptAuthor').val().trim(),
+                publisher: $('#iptPublisher').val().trim(),
+            }
+            console.log(bookData);
+            const newData = {}
+            for (k in bookData) {
+                if (bookData[k]) {
+                    newData[k] = bookData[k]
+                }
+                renderTable(newData)
+                // $.get(besetUrl + '/api/getbooks', (res) => {
+                //     const { data } = res
+                //     renderObj = []
+                //     data.forEach(item => {
+                //         console.log(item.bookname);
+                //         if (bookData.bookname === item.bookname || bookData.author === item.author || bookData.publisher === item.publisher) {
+                //             const tr = `
+                //         <tr>
+                //             <td>${item.id}</td>
+                //             <td>${item.bookname}</td>
+                //             <td>${item.author}</td>
+                //             <td>${item.publisher}</td>
+                //             <td><a href="javascript:;" class = "item-id" data-id = "${item.id}">删除</a></td>
+                //         </tr>`
+                //             renderObj.push(tr)
+                //             $('#tb').empty().append(renderObj)
+                //         }
+                //     })
+                // })
+            }
+        })
+        // 调用函数
+        renderTable()
+    </script>
+</body>
+
+</html>
